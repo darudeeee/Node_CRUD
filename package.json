@@ -8,5 +8,11 @@
   },
   "author": "",
   "license": "ISC",
-  "description": ""
+  "directories": {
+    "lib": "lib"
+  },
+  "description": "",
+  "dependencies": {
+    "sanitize-html": "^2.13.0"
+  }
 }
