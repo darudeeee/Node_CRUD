@@ -11,6 +11,7 @@ var app = http.createServer(function (request, response) {
   var queryData = url.parse(_url, true).query;
   var pathname = url.parse(_url, true).pathname;
   if (pathname === "/") {
+    // 메인 페이지
     if (queryData.id === undefined) {
       fs.readdir("./data", function (error, filelist) {
         var title = "Wellcome";
@@ -54,6 +55,7 @@ var app = http.createServer(function (request, response) {
       });
     }
   } else if (pathname === "/create") {
+    // 생성
     fs.readdir("./data", function (error, filelist) {
       var title = "WEB - create";
       var description = "Create";
@@ -88,6 +90,7 @@ var app = http.createServer(function (request, response) {
       });
     });
   } else if (pathname === "/update") {
+    // 수정
     fs.readdir("./data", function (error, filelist) {
       var filteredId = path.parse(queryData.id).base;
       fs.readFile(`data/${filteredId}`, "utf8", function (err, description) {
@@ -132,6 +135,7 @@ var app = http.createServer(function (request, response) {
       });
     });
   } else if (pathname === "/delete_process") {
+    // 삭제
     var body = "";
     request.on("data", function (data) {
       body = body + data;
