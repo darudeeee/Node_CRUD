@@ -2,43 +2,14 @@ var http = require("http");
 var fs = require("fs");
 var url = require("url");
 var qs = require("querystring");
+var template = require("./lib/template.js");
 const path = require("path");
-
-var template = {
-  HTML: function (title, list, body, control) {
-    return `<!doctype html>
-          <html>
-          <head>
-            <title>WEB1 - ${title}</title>
-            <meta charset="utf-8">
-          </head>
-          <body>
-            <h1><a href="/">WEB</a></h1>
-            ${list}
-            ${control}
-            ${body}
-          </body>
-          </html>
-      `;
-  },
-
-  list: function (filelist) {
-    var list = "<ul>";
-    var i = 0;
-    while (i < filelist.length) {
-      list = list + `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
-      i = i + 1;
-    }
-    list = list + "</ul>";
-    return list;
-  },
-};
+var sanitizeHtml = require("sanitize-html"); // sanitize는 외부에서 입력한 js를 살균
 
 var app = http.createServer(function (request, response) {
   var _url = request.url; // 그냥 url은 모듈 url 의미
   var queryData = url.parse(_url, true).query; // true는 쿼리를 객체로 변환할지 여부
   var pathname = url.parse(_url, true).pathname;
-
   if (pathname === "/") {
     if (queryData.id === undefined) {
       fs.readdir("./data", function (error, filelist) {
@@ -57,19 +28,27 @@ var app = http.createServer(function (request, response) {
       });
     } else {
       fs.readdir("./data", function (error, filelist) {
-        fs.readFile(`data/${queryData.id}`, "utf-8", function (err, data) {
+        var filteredId = path.parse(queryData.id).base;
+        // 외부에서 불러온 모듈(readFile)을 웹페이지에서 ../ 경로를 입력하여 찾을 수 없도록 해줌
+        // 필터링 해주지 않으면 http://localhost:3000/?id=../password.js 했을 때 password.js의 정보가 출력 됨
+        fs.readFile(`data/${filteredId}`, "utf-8", function (err, data) {
+          // 경로 설정도 필터링 된 것으로 변경
           var title = queryData.id;
+          var sanitizeTitle = sanitizeHtml(title);
           var description = data; // description = 본문
+          var sanitizeDescription = sanitizeHtml(description, {
+            allowedTags: ["h1"], // h1태그는 허용
+          });
           var list = template.list(filelist);
           var html = template.HTML(
-            title,
+            sanitizeTitle,
             list,
-            `<h2>${title}</h2><p>${description}</p>`,
+            `<h2>${sanitizeTitle}</h2><p>${sanitizeDescription}</p>`,
             `<a href="/create">create</a> 
-             <a href="/update?id=${title}">update</a>
+             <a href="/update?id=${sanitizeTitle}">update</a>
              
              <form action="delete_process" method="post">
-                  <input type="hidden" name="id" value="${title}">
+                  <input type="hidden" name="id" value="${sanitizeTitle}">
                   <input type="submit" value="delete">
              </form>`
             // delete를 링크로 만들면, get방식(쿼리스트링 있는)으로 만들면 링크를 타고 들어가면 삭제됨
@@ -122,7 +101,8 @@ var app = http.createServer(function (request, response) {
     });
   } else if (pathname === "/update") {
     fs.readdir("./data", function (error, filelist) {
-      fs.readFile(`data/${queryData.id}`, "utf8", function (err, description) {
+      var filteredId = path.parse(queryData.id).base;
+      fs.readFile(`data/${filteredId}`, "utf8", function (err, description) {
         var title = queryData.id;
         var list = template.list(filelist);
         var html = template.HTML(
@@ -171,7 +151,8 @@ var app = http.createServer(function (request, response) {
     request.on("end", function () {
       var post = qs.parse(body); // parse를 통하여 정보를 객체화
       var id = post.id;
-      fs.unlink(`data/${id}`, function (error) {
+      var filteredId = path.parse(id).base; // 이부분도 보안상 변경
+      fs.unlink(`data/${filteredId}`, function (error) {
         response.writeHead(302, { Location: `/` }); // 302 = 리다이렉션
         response.end();
       });
