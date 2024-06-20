@@ -4,33 +4,35 @@ var url = require("url");
 var qs = require("querystring");
 const path = require("path");
 
-function templateHTML(title, list, body, control) {
-  return `<!doctype html>
-        <html>
-        <head>
-          <title>WEB1 - ${title}</title>
-          <meta charset="utf-8">
-        </head>
-        <body>
-          <h1><a href="/">WEB</a></h1>
-          ${list}
-          ${control}
-          ${body}
-        </body>
-        </html>
-    `;
-}
+var template = {
+  HTML: function (title, list, body, control) {
+    return `<!doctype html>
+          <html>
+          <head>
+            <title>WEB1 - ${title}</title>
+            <meta charset="utf-8">
+          </head>
+          <body>
+            <h1><a href="/">WEB</a></h1>
+            ${list}
+            ${control}
+            ${body}
+          </body>
+          </html>
+      `;
+  },
 
-function templateList(filelist) {
-  var list = "<ul>";
-  var i = 0;
-  while (i < filelist.length) {
-    list = list + `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
-    i = i + 1;
-  }
-  list = list + "</ul>";
-  return list;
-}
+  list: function (filelist) {
+    var list = "<ul>";
+    var i = 0;
+    while (i < filelist.length) {
+      list = list + `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
+      i = i + 1;
+    }
+    list = list + "</ul>";
+    return list;
+  },
+};
 
 var app = http.createServer(function (request, response) {
   var _url = request.url; // 그냥 url은 모듈 url 의미
@@ -42,23 +44,24 @@ var app = http.createServer(function (request, response) {
       fs.readdir("./data", function (error, filelist) {
         var title = "Wellcome";
         var description = "Hello, Students";
-        var list = templateList(filelist);
-        var template = templateHTML(
+
+        var list = template.list(filelist);
+        var html = template.HTML(
           title,
           list,
           `<h2>${title}</h2><p>${description}</p>`,
           `<a href="/create">create</a>`
         );
         response.writeHead(200); // 200 = 성공
-        response.end(template);
+        response.end(html);
       });
     } else {
       fs.readdir("./data", function (error, filelist) {
         fs.readFile(`data/${queryData.id}`, "utf-8", function (err, data) {
           var title = queryData.id;
           var description = data; // description = 본문
-          var list = templateList(filelist);
-          var template = templateHTML(
+          var list = template.list(filelist);
+          var html = template.HTML(
             title,
             list,
             `<h2>${title}</h2><p>${description}</p>`,
@@ -74,7 +77,7 @@ var app = http.createServer(function (request, response) {
             // form에 onsubmit 사용하여 "정말로 삭제하시겠습니까?" 등의 창을 띄워도 좋을 듯
           );
           response.writeHead(200); // 200(서버가 브라우저에게 주면) = 성공
-          response.end(template);
+          response.end(html);
         });
       });
     }
@@ -82,8 +85,8 @@ var app = http.createServer(function (request, response) {
     fs.readdir("./data", function (error, filelist) {
       var title = "WEB - create";
       var description = "Create";
-      var list = templateList(filelist);
-      var template = templateHTML(
+      var list = template.list(filelist);
+      var html = template.HTML(
         title,
         list,
         ` 
@@ -96,7 +99,7 @@ var app = http.createServer(function (request, response) {
         " "
       );
       response.writeHead(200); // 200 = 성공
-      response.end(template);
+      response.end(html);
     });
   } else if (pathname === "/create_process") {
     var body = "";
@@ -121,8 +124,8 @@ var app = http.createServer(function (request, response) {
     fs.readdir("./data", function (error, filelist) {
       fs.readFile(`data/${queryData.id}`, "utf8", function (err, description) {
         var title = queryData.id;
-        var list = templateList(filelist);
-        var template = templateHTML(
+        var list = template.list(filelist);
+        var html = template.HTML(
           title,
           list,
           `
@@ -140,7 +143,7 @@ var app = http.createServer(function (request, response) {
           `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`
         );
         response.writeHead(200);
-        response.end(template);
+        response.end(html);
       });
     });
   } else if (pathname === "/update_process") {
