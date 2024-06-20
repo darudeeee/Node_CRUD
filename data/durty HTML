@@ -1,5 +1,0 @@
-<h1>This is dirty</h1> 
-<script>
-alert("메롱");
-</script>
-END
