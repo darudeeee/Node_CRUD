@@ -7,6 +7,29 @@ var fs = require("fs");       // 파일 시스템 접근
 var url = require("url");     // URL 파싱
 var qs = require("querystring"); // 쿼리스트링 파싱
 const path = require("path"); // 파일 경로 관리
+--
+
+보안
+--
+http.createServer() = Node Module
+server.listen() = 요청에 대해 응답할 수 있도록 하는 API\
+ttp는 app에 담겨있음
+app.listen(3000) 3000번 포트를 귀 기울여 듣다가 응답
+
+const path = require("path");
+
+외부 모듈을 이용할 때
+ var filteredId = path.parse(queryData.id).base;
+ path.parse(정화할 데이터).base를 이용해 필터링 해준다.
+ ㄴ 필터링 해주지 않으면 http://localhost:3000/?id=../password.js 했을 때 password.js의 정보가 출력 됨
+ 쿼리데이터 경로 설정 해두었던 것들도 바꾸어 준다.
+ ㄴ  var title = queryData.id;
+     var sanitizeTitle = sanitizeHtml(title);
+
+CRUD 중 D 주의해야 하는 부분
+delete를 링크로 만들면, get방식(쿼리스트링 있는)으로 만들면 링크를 타고 들어가면 삭제됨
+반드시 form을 이용한 post 방식으로 보내야 한다
+form에 onsubmit 사용하여 "정말로 삭제하시겠습니까?" 등의 창을 띄워도 좋을 듯
 - -
 
 HTML 템플릿
